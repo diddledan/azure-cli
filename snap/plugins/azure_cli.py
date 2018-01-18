@@ -214,31 +214,38 @@ class AzureCliPlugin(snapcraft.BasePlugin):
         self._pip.install(
             need_install, upgrade=True, install_deps=False)
 
-    def _download_sub_project(self, dir, requirements):
+    def _walk_project(self, func):
+        source = os.path.join(self.sourcedir, 'src')
+        for entry in os.listdir(source):
+            dir = os.path.join(source, entry)
+            if entry == 'command_modules':
+                for mod in os.listdir(dir):
+                    if not mod.startswith('.') and os.path.isdir(mod):
+                        func(os.path.join(dir, mod))
+            elif not entry.startswith('.') and os.path.isdir(dir):
+                func(dir)
+
+    def _download_project(self):
+        self._walk_project(self._download_sub_project)
+
+    def _install_project(self):
+        self._walk_project(self._install_sub_project)
+        return self._pip.list()
+
+    def _download_sub_project(self, dir):
+        requirements = self._get_requirements()
         setup_py_dir = self._get_setup_py_dir(dir)
         self._pip.download(
             self.options.python_packages, setup_py_dir=setup_py_dir,
             constraints=None, requirements=requirements)
 
-    def _download_project(self):
+    def _install_sub_project(self, dir):
         requirements = self._get_requirements()
-
-        with os.scandir(self.sourcedir + os.sep + 'src') as entries:
-            for entry in entries:
-                if entry.name == 'command_modules':
-                    with os.scandir(entry) as mods:
-                        for mod in mods:
-                            if not mod.name.startswith('.') and mod.is_dir():
-                                self._download_sub_project(mod, requirements)
-                elif not entry.name.startswith('.') and entry.is_dir():
-                    self._download_sub_project(entry, requirements)
-
-    def _install_sub_project(self, dir, requirements):
         setup_py_dir = self._get_setup_py_dir(dir)
         wheels = self._pip.wheel(
             self.options.python_packages, setup_py_dir=setup_py_dir,
             constraints=None, requirements=requirements)
-        
+
         self._install_wheels(wheels)
 
         if setup_py_dir is not None:
@@ -251,21 +258,6 @@ class AzureCliPlugin(snapcraft.BasePlugin):
                 #  this.
                 with contextlib.suppress(subprocess.CalledProcessError):
                     self._setup_tools_install(setup_py_path)
-
-    def _install_project(self):
-        requirements = self._get_requirements()
-        
-        with os.scandir(self.sourcedir + os.sep + 'src') as entries:
-            for entry in entries:
-                if entry.name == 'command_modules':
-                    with os.scandir(entry) as mods:
-                        for mod in mods:
-                            if not mod.name.startswith('.') and mod.is_dir():
-                                self._install_sub_project(mod, requirements)
-                elif not entry.name.startswith('.') and entry.is_dir():
-                    self._install_sub_project(entry, requirements)
-
-        return self._pip.list()
 
     def _setup_tools_install(self, setup_file):
         command = [
