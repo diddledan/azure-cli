@@ -23,8 +23,8 @@ parts:
     python-packages:
       - azure-nspkg
       - azure-mgmt-nspkg
-    prepare: |
-      sed -i 's|python |python3 |' ../src/src/azure-cli/az
+    install: |
+      sed -e 's|python |python3 |' ../src/src/azure-cli/az > $SNAPCRAFT_PART_INSTALL/bin/az
     prime:
       - -**/.*.swp
       - etc/python3.5
