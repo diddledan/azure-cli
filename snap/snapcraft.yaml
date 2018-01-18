@@ -2,10 +2,8 @@ name: azure-cli
 version: '2.0.25'
 summary: Command-line tools for Azure
 description: |
-  This is my-snap's description. You have a paragraph or two to tell the
-  most important story about your snap. Keep it under 100 words though,
-  we live in tweetspace and your description wants to look good in the snap
-  store.
+  A great cloud needs great tools; we're excited to introduce Azure CLI 2.0, our
+  next generation multi-platform command line experience for Azure.
 
 confinement: strict
 
@@ -25,13 +23,13 @@ parts:
     python-packages:
       - azure-nspkg
       - azure-mgmt-nspkg
-    install: |
-      sed -i 's|python |python3 |' src/azure-cli/az
-      cp src/azure-cli/az $SNAPCRAFT_PART_INSTALL/bin
+    prepare: |
+      sed -i 's|python |python3 |' ../src/src/azure-cli/az
     prime:
+      - -**/.*.swp
+      - etc/python3.5
       - bin
       - lib
-      - -lib/python*/site-packages/*.dist-info
       - usr/bin
       - usr/lib
       - -usr/lib/gcc
