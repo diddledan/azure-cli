@@ -28,3 +28,12 @@ parts:
     install: |
       sed -i 's|python |python3 |' src/azure-cli/az
       cp src/azure-cli/az $SNAPCRAFT_PART_INSTALL/bin
+    prime:
+      - bin
+      - lib
+      - -lib/python*/site-packages/*.dist-info
+      - usr/bin
+      - usr/lib
+      - -usr/lib/gcc
+      - -usr/lib/mime
+      - -usr/lib/valgrind
